@@ -20,10 +20,12 @@ def load(ckpt_dir, net, optim):
         epoch = 0
         return net, optim, epoch
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     ckpt_lst = os.listdir(ckpt_dir)
     ckpt_lst.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
 
-    dict_model = torch.load('%s/%s' % (ckpt_dir, ckpt_lst[-1]))
+    dict_model = torch.load('%s/%s' % (ckpt_dir, ckpt_lst[-1]), map_location=device)
 
     net.load_state_dict(dict_model['net'])
     optim.load_state_dict(dict_model['optim'])
@@ -136,7 +138,6 @@ def add_blur(img, type="bilinear", opts=None):
 ##
 
 def image2patch(src, nimg, npatch, nmargin, datatype="tensor"):
-
     src = src.to('cpu').detach().numpy()
 
     nimg_zp = np.zeros(4, np.int32)
@@ -168,12 +169,13 @@ def image2patch(src, nimg, npatch, nmargin, datatype="tensor"):
             for k in range(0, nset[2]):
                 for q in range(0, nset[3]):
 
+                    pos = [nset[3] * nset[2] * nset[1] * i + nset[2] * nset[1] * j + nset[1] * k + q]
+
                     i_ = iset[0][i] + patch[0]
                     j_ = iset[1][j] + patch[1]
                     k_ = iset[2][k] + patch[2]
                     q_ = iset[3][q] + patch[3]
 
-                    pos = [nset[2] * nset[1] * nset[0] * q + nset[1] * nset[0] * k + nset[0] * j + i]
                     dst[pos, :, :, :] = src[i_, j_, k_, q_]
 
     if datatype == "tensor":
@@ -259,7 +261,7 @@ def patch2image(src, nimg, npatch, nmargin, datatype="tensor", type="count"):
                             else:
                                 wgt_ *= np.flip(wgt_bnd[id], id) * wgt_bnd[id]
 
-                    pos = [nset[2] * nset[1] * nset[0] * q + nset[1] * nset[0] * k + nset[0] * j + i]
+                    pos = [nset[3] * nset[2] * nset[1] * i + nset[2] * nset[1] * j + nset[1] * k + q]
 
                     i_ = iset[0][i] + crop[0]
                     j_ = iset[1][j] + crop[1]

@@ -61,23 +61,23 @@ from torchvision import transforms
 parser = argparse.ArgumentParser(description="Regression Tasks such as inpainting, denoising, and super_resolution",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("--mode", default="train", choices=["train", "test"], type=str, dest="mode")
-parser.add_argument("--train_continue", default="off", choices=["on", "off"], type=str, dest="train_continue")
+parser.add_argument("--mode", default="test", choices=["train", "test"], type=str, dest="mode")
+parser.add_argument("--train_continue", default="on", choices=["on", "off"], type=str, dest="train_continue")
 
-parser.add_argument("--lr", default=1e-3, type=float, dest="lr")
-parser.add_argument("--batch_size", default=4, type=int, dest="batch_size")
-parser.add_argument("--num_epoch", default=500, type=int, dest="num_epoch")
+parser.add_argument("--lr", default=1e-4, type=float, dest="lr")
+parser.add_argument("--batch_size", default=8, type=int, dest="batch_size")
+parser.add_argument("--num_epoch", default=300, type=int, dest="num_epoch")
 
 parser.add_argument("--data_dir", default="./datasets/BSR/BSDS500/data/images", type=str, dest="data_dir")
-parser.add_argument("--ckpt_dir", default="./checkpoint/inpainting/plain", type=str, dest="ckpt_dir")
-parser.add_argument("--log_dir", default="./log/inpainting/plain", type=str, dest="log_dir")
-parser.add_argument("--result_dir", default="./result/inpainting/plain", type=str, dest="result_dir")
+parser.add_argument("--ckpt_dir", default="./checkpoint/srresnet/super_resolution", type=str, dest="ckpt_dir")
+parser.add_argument("--log_dir", default="./log/srresnet/super_resolution", type=str, dest="log_dir")
+parser.add_argument("--result_dir", default="./result/srresnet/super_resolution", type=str, dest="result_dir")
 
 parser.add_argument("--task", default="super_resolution", choices=["inpainting", "denoising", "super_resolution"], type=str, dest="task")
-parser.add_argument('--opts', nargs='+', default=['bilinear', 4.0], dest='opts')
+parser.add_argument('--opts', nargs='+', default=['bilinear', 4.0, 0], dest='opts')
 
-parser.add_argument("--ny", default=64, type=int, dest="ny")
-parser.add_argument("--nx", default=64, type=int, dest="nx")
+parser.add_argument("--ny", default=320, type=int, dest="ny")
+parser.add_argument("--nx", default=480, type=int, dest="nx")
 parser.add_argument("--nch", default=3, type=int, dest="nch")
 parser.add_argument("--nker", default=64, type=int, dest="nker")
 
@@ -148,14 +148,17 @@ if not os.path.exists(result_dir):
 
 ## 네트워크 학습하기
 if mode == 'train':
-    transform_train = transforms.Compose([RandomCrop(shape=(ny, nx)), Normalization(mean=0.5, std=0.5), RandomFlip()])
-    transform_val = transforms.Compose([RandomCrop(shape=(ny, nx)), Normalization(mean=0.5, std=0.5)])
+    # transform_train = transforms.Compose([RandomCrop(shape=(ny, nx)), Normalization(mean=0.5, std=0.5), RandomFlip()])
+    # transform_val = transforms.Compose([RandomCrop(shape=(ny, nx)), Normalization(mean=0.5, std=0.5)])
+
+    transform_train = transforms.Compose([RandomCrop(shape=(ny, nx)), RandomFlip()])
+    transform_val = transforms.Compose([RandomCrop(shape=(ny, nx))])
 
     dataset_train = Dataset(data_dir=os.path.join(data_dir, 'train'), transform=transform_train, task=task, opts=opts)
-    loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=0)
+    loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
 
     dataset_val = Dataset(data_dir=os.path.join(data_dir, 'val'), transform=transform_val, task=task, opts=opts)
-    loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=True, num_workers=0)
+    loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=True, num_workers=8)
 
     # 그밖에 부수적인 variables 설정하기
     num_data_train = len(dataset_train)
@@ -164,10 +167,12 @@ if mode == 'train':
     num_batch_train = np.ceil(num_data_train / batch_size)
     num_batch_val = np.ceil(num_data_val / batch_size)
 else:
-    transform_test = transforms.Compose([Normalization(mean=0.5, std=0.5)])
+    # transform_test = transforms.Compose([Normalization(mean=0.5, std=0.5)])
+    # transform_test = None
+    transform_test = transforms.Compose([RandomCrop(shape=(ny, nx))])
 
     dataset_test = Dataset(data_dir=os.path.join(data_dir, 'test'), transform=transform_test, task=task, opts=opts)
-    loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=0)
+    loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=8)
 
     # 그밖에 부수적인 variables 설정하기
     num_data_test = len(dataset_test)
@@ -235,12 +240,17 @@ if mode == 'train':
             print("TRAIN: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
                   (epoch, num_epoch, batch, num_batch_train, np.mean(loss_mse)))
 
-            if batch % 30 == 0:
+            if batch % 20 == 0:
               # Tensorboard 저장하기
-              label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
-              input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-              output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
+              # label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
+              # input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
+              # output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
 
+              label = fn_tonumpy(label)
+              input = fn_tonumpy(input)
+              output = fn_tonumpy(output)
+
+              label = np.clip(label, a_min=0, a_max=1)
               input = np.clip(input, a_min=0, a_max=1)
               output = np.clip(output, a_min=0, a_max=1)
 
@@ -275,12 +285,17 @@ if mode == 'train':
                 print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f" %
                       (epoch, num_epoch, batch, num_batch_val, np.mean(loss_mse)))
 
-                if batch % 20 == 0:
+                if batch % 10 == 0:
                   # Tensorboard 저장하기
-                  label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
-                  input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-                  output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
+                  # label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
+                  # input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
+                  # output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
 
+                  label = fn_tonumpy(label)
+                  input = fn_tonumpy(input)
+                  output = fn_tonumpy(output)
+
+                  label = np.clip(label, a_min=0, a_max=1)
                   input = np.clip(input, a_min=0, a_max=1)
                   output = np.clip(output, a_min=0, a_max=1)
 
@@ -315,17 +330,21 @@ else:
             label = data['label'].to(device)
             input = data['input'].to(device)
 
-            nimg = input.shape
-            npatch = [1, nch, ny, nx]
-            nmargin = [0, 0, 3, 3]
+            nimg_in = input.shape
+            nimg_out = label.shape
+            npatch_in = [1, nch, ny, nx] if not network == "srresnet" else [1, nch, int(ny//opts[1][0]), int(nx//opts[1][0])]
+            npatch_out = [1, nch, ny, nx]
+            nmargin = [0, 0, 0, 0]
 
-            patch = image2patch(input, nimg, npatch, nmargin).to(device)
-            output = torch.zeros_like(patch)
+            patch = image2patch(input, nimg_in, npatch_in, nmargin).to(device)
+
+            nout = [patch.shape[0], nch, ny, nx]
+            output = torch.zeros(nout)
 
             for i in range(patch.shape[0]):
                 output[i] = net(patch[[i]])
 
-            output = patch2image(output, nimg, npatch, nmargin).to(device)
+            output = patch2image(output, nimg_out, npatch_out, nmargin).to(device)
 
             # 손실함수 계산하기
             loss = fn_loss(output, label)
@@ -336,9 +355,13 @@ else:
                   (batch, num_batch_test, np.mean(loss_mse)))
 
             # Tensorboard 저장하기
-            label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
-            input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-            output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
+            # label = fn_tonumpy(fn_denorm(label, mean=0.5, std=0.5))
+            # input = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
+            # output = fn_tonumpy(fn_denorm(output, mean=0.5, std=0.5))
+
+            label = fn_tonumpy(label)
+            input = fn_tonumpy(input)
+            output = fn_tonumpy(output)
 
             for j in range(label.shape[0]):
                 id = batch_size * (batch - 1) + j

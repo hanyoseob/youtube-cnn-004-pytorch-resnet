@@ -60,8 +60,8 @@ class PixelShuffle(nn.Module):
 
         [B, C, H, W] = list(x.shape)
         x = x.reshape(B, C, H // r, r, W // r, r)
-        x = x.transpose(0, 1, 3, 5, 2, 4)
-        # x = x.permute(0, 1, 3, 5, 2, 4)
+        # x = x.transpose(0, 1, 3, 5, 2, 4)
+        x = x.permute(0, 1, 3, 5, 2, 4)
         x = x.reshape(B, C * r * r, H // r, W // r)
 
         return x
@@ -77,8 +77,8 @@ class PixelUnshuffle(nn.Module):
 
         [B, C, H, W] = list(x.shape)
         x = x.reshape(B, C // (r * r), r, r, H, W)
-        x = x.transpose(0, 1, 4, 2, 5, 3)
-        # x = x.permute(0, 1, 4, 2, 5, 3)
+        # x = x.transpose(0, 1, 4, 2, 5, 3)
+        x = x.permute(0, 1, 4, 2, 5, 3)
         x = x.reshape(B, C // (r * r), H * r, W * r)
 
         return x
