@@ -40,7 +40,7 @@ class ResBlock(nn.Module):
                          bias=bias, norm=norm, relu=relu)]
 
         # 2nd conv
-        layers += [CBR2d(in_channels=in_channels, out_channels=out_channels,
+        layers += [CBR2d(in_channels=out_channels, out_channels=out_channels,
                          kernel_size=kernel_size, stride=stride, padding=padding,
                          bias=bias, norm=norm, relu=None)]
 
