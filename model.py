@@ -172,7 +172,7 @@ class Hourglass(nn.Module):
         self.dec1_2 = CBR2d(in_channels=1 * 1 * nker, out_channels=1 * nker, norm=norm)
         self.dec1_1 = CBR2d(in_channels=1 * nker, out_channels=1 * nker, norm=norm)
 
-        self.fc = nn.Conv2d(in_channels=1 * nker, out_channels=nout, kernel_size=1, stride=1, padding=0, bias=True)
+        self.fc = CBR2d(in_channels=1 * nker, out_channels=nout, kernel_size=1, stride=1, padding=0, bias=True, norm=None, relu=None)
 
     def forward(self, x):
         enc1_1 = self.enc1_1(x)

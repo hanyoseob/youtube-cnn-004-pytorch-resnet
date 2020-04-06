@@ -168,7 +168,7 @@ if mode == 'train':
     num_batch_val = np.ceil(num_data_val / batch_size)
 else:
     # transform_test = transforms.Compose([Normalization(mean=0.5, std=0.5)])
-    # transform_test = None
+
     transform_test = transforms.Compose([RandomCrop(shape=(ny, nx))])
 
     dataset_test = Dataset(data_dir=os.path.join(data_dir, 'test'), transform=transform_test, task=task, opts=opts)
@@ -330,21 +330,23 @@ else:
             label = data['label'].to(device)
             input = data['input'].to(device)
 
-            nimg_in = input.shape
-            nimg_out = label.shape
-            npatch_in = [1, nch, ny, nx] if not network == "srresnet" else [1, nch, int(ny//opts[1][0]), int(nx//opts[1][0])]
-            npatch_out = [1, nch, ny, nx]
-            nmargin = [0, 0, 0, 0]
+            output = net(input)
 
-            patch = image2patch(input, nimg_in, npatch_in, nmargin).to(device)
-
-            nout = [patch.shape[0], nch, ny, nx]
-            output = torch.zeros(nout)
-
-            for i in range(patch.shape[0]):
-                output[i] = net(patch[[i]])
-
-            output = patch2image(output, nimg_out, npatch_out, nmargin).to(device)
+            # nimg_in = input.shape
+            # nimg_out = label.shape
+            # npatch_in = [1, nch, ny, nx] if not network == "srresnet" else [1, nch, int(ny//opts[1][0]), int(nx//opts[1][0])]
+            # npatch_out = [1, nch, ny, nx]
+            # nmargin = [0, 0, 0, 0]
+            #
+            # patch = image2patch(input, nimg_in, npatch_in, nmargin).to(device)
+            #
+            # nout = [patch.shape[0], nch, ny, nx]
+            # output = torch.zeros(nout)
+            #
+            # for i in range(patch.shape[0]):
+            #     output[i] = net(patch[[i]])
+            #
+            # output = patch2image(output, nimg_out, npatch_out, nmargin).to(device)
 
             # 손실함수 계산하기
             loss = fn_loss(output, label)
