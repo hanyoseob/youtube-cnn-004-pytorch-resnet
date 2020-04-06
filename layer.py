@@ -50,35 +50,39 @@ class ResBlock(nn.Module):
         return x + self.resblk(x)
 
 
-class PixelShuffle(nn.Module):
-    def __init__(self, shuffle=2):
+class PixelUnshuffle(nn.Module):
+    def __init__(self, ry=2, rx=2):
         super().__init__()
-        self.shuffle = shuffle
+        self.ry = ry
+        self.rx = rx
 
     def forward(self, x):
-        r = self.shuffle
+        ry = self.ry
+        rx = self.rx
 
         [B, C, H, W] = list(x.shape)
-        x = x.reshape(B, C, H // r, r, W // r, r)
-        # x = x.transpose(0, 1, 3, 5, 2, 4)
+
+        x = x.reshape(B, C, H // ry, ry, W // rx, rx)
         x = x.permute(0, 1, 3, 5, 2, 4)
-        x = x.reshape(B, C * r * r, H // r, W // r)
+        x = x.reshape(B, C * (ry * rx), H // ry, W // rx)
 
         return x
 
 
-class PixelUnshuffle(nn.Module):
-    def __init__(self, shuffle=2):
+class PixelShuffle(nn.Module):
+    def __init__(self, ry=2, rx=2):
         super().__init__()
-        self.shuffle = shuffle
+        self.ry = ry
+        self.rx = rx
 
     def forward(self, x):
-        r = self.shuffle
+        ry = self.ry
+        rx = self.rx
 
         [B, C, H, W] = list(x.shape)
-        x = x.reshape(B, C // (r * r), r, r, H, W)
-        # x = x.transpose(0, 1, 4, 2, 5, 3)
+
+        x = x.reshape(B, C // (ry * rx), ry, rx, H, W)
         x = x.permute(0, 1, 4, 2, 5, 3)
-        x = x.reshape(B, C // (r * r), H * r, W * r)
+        x = x.reshape(B, C // (ry * rx), H * ry, W * rx)
 
         return x

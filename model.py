@@ -10,13 +10,13 @@ from layer import *
 # U-Net: Convolutional Networks for Biomedical Image Segmentation
 # https://arxiv.org/abs/1505.04597
 class UNet(nn.Module):
-    def __init__(self, nin, nout, nker=64, learning_type="plain", norm="bnorm"):
+    def __init__(self, in_channels, out_channels, nker=64, learning_type="plain", norm="bnorm"):
         super(UNet, self).__init__()
 
         self.learning_type = learning_type
 
         # Contracting path
-        self.enc1_1 = CBR2d(in_channels=nin, out_channels=1 * nker, norm=norm)
+        self.enc1_1 = CBR2d(in_channels=in_channels, out_channels=1 * nker, norm=norm)
         self.enc1_2 = CBR2d(in_channels=1 * nker, out_channels=1 * nker, norm=norm)
 
         self.pool1 = nn.MaxPool2d(kernel_size=2)
@@ -65,7 +65,7 @@ class UNet(nn.Module):
         self.dec1_2 = CBR2d(in_channels=2 * 1 * nker, out_channels=1 * nker, norm=norm)
         self.dec1_1 = CBR2d(in_channels=1 * nker, out_channels=1 * nker, norm=norm)
 
-        self.fc = nn.Conv2d(in_channels=1 * nker, out_channels=nout, kernel_size=1, stride=1, padding=0, bias=True)
+        self.fc = nn.Conv2d(in_channels=1 * nker, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=True)
 
     def forward(self, x):
         enc1_1 = self.enc1_1(x)
@@ -117,13 +117,13 @@ class UNet(nn.Module):
 
 
 class Hourglass(nn.Module):
-    def __init__(self, nin, nout, nker=64, learning_type="plain", norm="bnorm"):
+    def __init__(self, in_channels, out_channels, nker=64, learning_type="plain", norm="bnorm"):
         super(Hourglass, self).__init__()
 
         self.learning_type = learning_type
 
         # Contracting path
-        self.enc1_1 = CBR2d(in_channels=nin, out_channels=1 * nker, norm=norm)
+        self.enc1_1 = CBR2d(in_channels=in_channels, out_channels=1 * nker, norm=norm)
         self.enc1_2 = CBR2d(in_channels=1 * nker, out_channels=1 * nker, norm=norm)
 
         self.pool1 = nn.MaxPool2d(kernel_size=2)
@@ -172,7 +172,7 @@ class Hourglass(nn.Module):
         self.dec1_2 = CBR2d(in_channels=1 * 1 * nker, out_channels=1 * nker, norm=norm)
         self.dec1_1 = CBR2d(in_channels=1 * nker, out_channels=1 * nker, norm=norm)
 
-        self.fc = CBR2d(in_channels=1 * nker, out_channels=nout, kernel_size=1, stride=1, padding=0, bias=True, norm=None, relu=None)
+        self.fc = CBR2d(in_channels=1 * nker, out_channels=out_channels, kernel_size=1, stride=1, padding=0, bias=True, norm=None, relu=None)
 
     def forward(self, x):
         enc1_1 = self.enc1_1(x)
@@ -229,12 +229,12 @@ class Hourglass(nn.Module):
 # Deep Residual Learning for Image Recognition
 # https://arxiv.org/abs/1512.03385
 class ResNet(nn.Module):
-    def __init__(self, nin, nout, nker=64, learning_type="plain", norm="bnorm", nblk=16):
+    def __init__(self, in_channels, out_channels, nker=64, learning_type="plain", norm="bnorm", nblk=16):
         super(ResNet, self).__init__()
 
         self.learning_type = learning_type
 
-        self.enc = CBR2d(nin, nker, kernel_size=3, stride=1, padding=1, bias=True, norm=None, relu=0.0)
+        self.enc = CBR2d(in_channels, nker, kernel_size=3, stride=1, padding=1, bias=True, norm=None, relu=0.0)
 
         res = []
         for i in range(nblk):
@@ -243,7 +243,7 @@ class ResNet(nn.Module):
 
         self.dec = CBR2d(nker, nker, kernel_size=3, stride=1, padding=1, bias=True, norm=norm, relu=0.0)
 
-        self.fc = CBR2d(nker, nout, kernel_size=1, stride=1, padding=0, bias=True, norm=None, relu=None)
+        self.fc = CBR2d(nker, out_channels, kernel_size=1, stride=1, padding=0, bias=True, norm=None, relu=None)
 
     def forward(self, x):
         x0 = x
@@ -263,12 +263,12 @@ class ResNet(nn.Module):
 # Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network
 # https://arxiv.org/abs/1609.04802
 class SRResNet(nn.Module):
-    def __init__(self, nin, nout, nker=64, learning_type="plain", norm="bnorm", nblk=16):
+    def __init__(self, in_channels, out_channels, nker=64, learning_type="plain", norm="bnorm", nblk=16):
         super(SRResNet, self).__init__()
 
         self.learning_type = learning_type
 
-        self.enc = CBR2d(nin, nker, kernel_size=9, stride=1, padding=4, bias=True, norm=None, relu=0.0)
+        self.enc = CBR2d(in_channels, nker, kernel_size=9, stride=1, padding=4, bias=True, norm=None, relu=0.0)
 
         res = []
         for i in range(nblk):
@@ -288,17 +288,17 @@ class SRResNet(nn.Module):
 
         ps1 = []
         ps1 += [nn.Conv2d(in_channels=nker, out_channels=4 * nker, kernel_size=3, stride=1, padding=1)]
-        ps1 += [PixelUnshuffle(shuffle=2)]
+        ps1 += [PixelShuffle(ry=2, rx=2)]
         ps1 += [nn.ReLU()]
         self.ps1 = nn.Sequential(*ps1)
 
         ps2 = []
         ps2 += [nn.Conv2d(in_channels=nker, out_channels=4 * nker, kernel_size=3, stride=1, padding=1)]
-        ps2 += [PixelUnshuffle(shuffle=2)]
+        ps2 += [PixelShuffle(ry=2, rx=2)]
         ps2 += [nn.ReLU()]
         self.ps2 = nn.Sequential(*ps2)
 
-        self.fc = CBR2d(nker, nout, kernel_size=9, stride=1, padding=4, bias=True, norm=None, relu=None)
+        self.fc = CBR2d(nker, out_channels, kernel_size=9, stride=1, padding=4, bias=True, norm=None, relu=None)
 
     def forward(self, x):
         x = self.enc(x)
