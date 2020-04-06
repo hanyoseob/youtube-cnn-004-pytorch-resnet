@@ -181,13 +181,13 @@ else:
 
 ## 네트워크 생성하기
 if network == "unet":
-    net = UNet(nin=nch, nout=nch, nker=nker, learning_type=learning_type).to(device)
+    net = UNet(in_channels=nch, out_channels=nch, nker=nker, learning_type=learning_type).to(device)
 elif network == "hourglass":
-    net = Hourglass(nin=nch, nout=nch, nker=nker, learning_type=learning_type).to(device)
+    net = Hourglass(in_channels=nch, out_channels=nch, nker=nker, learning_type=learning_type).to(device)
 elif network == "resnet":
-    net = ResNet(nin=nch, nout=nch, nker=nker, learning_type=learning_type).to(device)
+    net = ResNet(in_channels=nch, out_channels=nch, nker=nker, learning_type=learning_type).to(device)
 elif network == "srresnet":
-    net = SRResNet(nin=nch, nout=nch, nker=nker, learning_type=learning_type).to(device)
+    net = SRResNet(in_channels=nch, out_channels=nch, nker=nker, learning_type=learning_type).to(device)
 
 ## 손실함수 정의하기
 # fn_loss = nn.BCEWithLogitsLoss().to(device)
