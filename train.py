@@ -4,6 +4,13 @@ denoising
 -------------------------------------
 python  train.py \
         --mode train \
+        --network unet \
+        --learning_type residual \
+        --task denoising \
+        --opts random 30.0
+
+python  train.py \
+        --mode train \
         --network resnet \
         --learning_type residual \
         --task denoising \
@@ -14,12 +21,11 @@ inpainting
 -------------------------------------
 python  train.py \
         --mode train \
-        --network resnet \
+        --network unet \
         --learning_type residual \
         --task inpainting \
-        --opts uniform 0.5
+        --opts random 0.5
 
--------------------------------------
 python  train.py \
         --mode train \
         --network resnet \
@@ -32,10 +38,24 @@ super_resolution
 -------------------------------------
 python  train.py \
         --mode train \
+        --network unet \
+        --learning_type residual \
+        --task super_resolution \
+        --opts bilinear 4.0
+
+python  train.py \
+        --mode train \
         --network resnet \
         --learning_type residual \
         --task super_resolution \
         --opts bilinear 4.0
+
+python  train.py \
+        --mode train \
+        --network srresnet \
+        --learning_type residual \
+        --task super_resolution \
+        --opts bilinear 4.0 0.0
 """
 
 ## 라이브러리 추가하기
