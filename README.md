@@ -11,8 +11,8 @@
             --network unet \
             --learning_type residual \
             --task denoising \
-            --opts random 30.0
-            
+            --opts random 30.0         
+---
     python  train.py \
             --mode train \
             --network resnet \
@@ -47,14 +47,14 @@
             --learning_type residual \
             --task super_resolution \
             --opts bilinear 4.0
-            
+---
     python  train.py \
             --mode train \
             --network resnet \
             --learning_type residual \
             --task super_resolution \
             --opts bilinear 4.0
-            
+---
     python  train.py \
             --mode train \
             --network srresnet \
