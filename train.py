@@ -332,22 +332,6 @@ else:
 
             output = net(input)
 
-            # nimg_in = input.shape
-            # nimg_out = label.shape
-            # npatch_in = [1, nch, ny, nx] if not network == "srresnet" else [1, nch, int(ny//opts[1][0]), int(nx//opts[1][0])]
-            # npatch_out = [1, nch, ny, nx]
-            # nmargin = [0, 0, 0, 0]
-            #
-            # patch = image2patch(input, nimg_in, npatch_in, nmargin).to(device)
-            #
-            # nout = [patch.shape[0], nch, ny, nx]
-            # output = torch.zeros(nout)
-            #
-            # for i in range(patch.shape[0]):
-            #     output[i] = net(patch[[i]])
-            #
-            # output = patch2image(output, nimg_out, npatch_out, nmargin).to(device)
-
             # 손실함수 계산하기
             loss = fn_loss(output, label)
 
